@@ -6,72 +6,153 @@
  * To change this template use File | Settings | File Templates.
  */
 
-function square(state){
-    var isAlive = false;
+function square() {
+    this._isAlive = false;
+    this._neighbours = new Array();
 
-    switch (state) {
-        case "O":
-            becomeDead();
-            break;
-        case "X":
-            becomeAlive();
-            break;
-        default:
-
-            break;
-
+    function isAlive(){
+        return this._isAlive;
     }
 
     function becomeAlive(){
-        isAlive = true;
+        this._isAlive = true;
+
     }
 
     function becomeDead(){
-        isAlive = false;
+        this._isAlive = false;
+    }
+
+    function neighbours(){
+        return this._neighbours;
+    }
+
+    function addNeighbour(sqCoords){
+        if(!this._neighbours){
+            this._neighbours = new Array();
+        }
+        this._neighbours.push(sqCoords);
     }
 
     return {
-        isAlive: function(){
-            return isAlive;
-        },
-        becomeAlive: function(){
-            becomeAlive();
-
-        },
-        becomeDead: function(){
-            becomeDead();
-        }
-
+        isAlive: isAlive,
+        becomeAlive: becomeAlive,
+        becomeDead: becomeDead,
+        neighbours: neighbours,
+        addNeighbour: addNeighbour
     }
 };
 
 
-function initGame(map, x, y){
-    var game = new Array;
-    var dimensions = {};
-    dimensions.x = x;
-    dimensions.y = y;
-    game.dimensions = dimensions;
+
+
+
+function initGame(map){
+    var game = new Array();
 
     for(var i = 0; i < map.length; i++){
-        game.push(square(map[i]));
+        var row = new Array();
+        for(var j = 0; j < map[0].length; j++){
+            var sq = new square();
+            if(map[i][j] == "x"){
+                sq.becomeAlive();
+            }
+
+            for(var ny = -1; ny <2; ny++){
+                for(var nx = -1; nx <2; nx++){
+                    var newX = i+nx;
+                    var newY = j+ny;
+
+                    if(map[newY] && map[newY][newX]){
+                        sq.addNeighbour({"x":newX,"y":newY});
+                    }
+
+
+                }
+            }
+
+
+            row.push(sq);
+        }
+        game.push(row);
     }
 
     return game;
 };
 
+
+function nextGen(map){
+    var nextGen = map;
+
+    function getAllNeighbours(map){
+        var neighbourList = new Array();
+        var max = x*y;
+        for(var ny = -1; ny <2; ny++){
+            for(var nx = -1; nx <2; nx++){
+                var n = sq + (ny*x)+nx;
+                neighbourList.push(n);
+/*                if(n>-1 && n<max){
+                    neighbourList.push(n);
+                }*/
+            }
+        }
+
+        var index = neighbourList.indexOf(sq);
+        if (index > -1) {
+            neighbourList.splice(index, 1);
+        }
+
+        return neighbourList;
+    }
+
+    /*function getCoords(sq, x, y){
+        var s = {
+            x : 1,
+            y : 1
+        };
+
+        //1. atrodam esošā koordinātas
+        s.x = sq % (x);
+        s.y = Math.floor(sq/(x));
+        return s;
+    }
+
+
+    function willSurvive(sq, x, y){
+        var ods = false;
+        var current = getCoords(sq, x, y);
+
+        var neighbors = new Array();
+        for(var nb = 1; nb <9; nb++){
+
+        }
+
+
+
+        return ods;
+    }
+
+    for(var i = 0; i < map.length; i++){
+        var neightbours = getAllNeighbours(i);
+        willSurvive(i, map.dimensions.x,map.dimensions.y);
+    }*/
+
+    console.log(getAllNeighbours(map));
+
+    return nextGen;
+}
+
+
 var print = function(game){
 
-    var x = game.dimensions.x;
-    var y = game.dimensions.y;
     var output = "";
-    for(var a = 0; a < y; a++){
+    for(var a = 0; a < game.length; a++){
 
-        for(var b = 0; b < x; b++){
+        for(var b = 0; b < game[0].length; b++){
 
-            var s = parseInt((a*y)+b);
+            var s = parseInt((a*game.length)+b);
 
-            var res = game[s].isAlive();
+            var res = game[a][b].isAlive();
             if(res){
                 output +="X";
             } else {
@@ -88,16 +169,23 @@ function processGeneration(){
 
 };
 
-var map =  ["X","0","0","0","0",
-    "0","0","X","0","0",
-    "0","0","X","X","0",
-    "0","0","X","0","0",
-    "0","0","0","0","X"];
+var map =  ["x     ",
+            "  xx  ",
+            "  xx  ",
+            "x  x  ",
+            "x    x"];
 
 
-var game = initGame(map, 5, 5);
+var game = initGame(map, map[0].length, map.length);
 
 /* testing field */
 //console.log(game);
-
-print(game);
+console.log(game[0][0].neighbours());
+//print(game);
+//nextGen(game);
+/*var sq = new square("X");
+console.log(sq);
+sq.becomeDead();
+console.log("result2", sq.isAlive());
+sq.becomeAlive();
+console.log("result2", sq.isAlive());*/
