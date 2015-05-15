@@ -50,27 +50,32 @@ function square() {
 function initGame(map){
     var game = new Array();
 
+    //todo generation counter
+    //todo module where everything is under game object. For example game.print, game.nextGen, game.grid
+
+
     for(var i = 0; i < map.length; i++){
         var row = new Array();
         for(var j = 0; j < map[0].length; j++){
             var sq = new square();
-            if(map[i][j] == "x"){
-                sq.becomeAlive();
-            }
 
+            if(map[i][j] == "x"){
+
+                sq.becomeAlive();
+            } /*else {
+                sq.becomeDead();
+            }*/
             for(var ny = -1; ny <2; ny++){
                 for(var nx = -1; nx <2; nx++){
-                    var newX = i+nx;
-                    var newY = j+ny;
+                    var newX = j+ny;
+                    var newY = i+nx;
 
-                    if(map[newY] && map[newY][newX]){
+                    //if valid neighbour chosen and not self
+                    if((map[newY] && map[newY][newX]) && ((newX != j) || (newY != i))){
                         sq.addNeighbour({"x":newX,"y":newY});
                     }
-
-
                 }
             }
-
 
             row.push(sq);
         }
@@ -81,63 +86,45 @@ function initGame(map){
 };
 
 
-function nextGen(map){
-    var nextGen = map;
+function nextGen(game){
+    var nextGen = new Array();
+    //taisām ciklu
+    //pārbaudām katrā šūnā kaimiņus un atgriežam vajadzīgo vērtību nextGenā
+    for(var i = 0; i < game.length; i++){
+        var row = new Array();
+        for(var j = 0; j < game[0].length; j++){
 
-    function getAllNeighbours(map){
-        var neighbourList = new Array();
-        var max = x*y;
-        for(var ny = -1; ny <2; ny++){
-            for(var nx = -1; nx <2; nx++){
-                var n = sq + (ny*x)+nx;
-                neighbourList.push(n);
-/*                if(n>-1 && n<max){
-                    neighbourList.push(n);
-                }*/
+            var cell = Object.create(game[i][j]);
+            var nb = cell.neighbours();
+
+            var liveNeighbours = 0;
+            //skaitām dzīvos kaimiņus
+            for(var k = 0; k < nb.length; k++){
+
+                var nbx = nb[k].x;
+                var nby = nb[k].y;
+                if(game[nby][nbx].isAlive()){
+                    liveNeighbours++;
+                }
             }
+
+            if(liveNeighbours < 2){
+                //mirst
+                cell.becomeDead();
+
+            } else if(liveNeighbours > 3){
+                //mirst
+                cell.becomeDead();
+            }else if(liveNeighbours == 3 && !cell.isAlive()) {
+                cell.becomeAlive();
+            }
+            row.push(cell);
         }
 
-        var index = neighbourList.indexOf(sq);
-        if (index > -1) {
-            neighbourList.splice(index, 1);
-        }
-
-        return neighbourList;
-    }
-
-    /*function getCoords(sq, x, y){
-        var s = {
-            x : 1,
-            y : 1
-        };
-
-        //1. atrodam esošā koordinātas
-        s.x = sq % (x);
-        s.y = Math.floor(sq/(x));
-        return s;
+        nextGen.push(row);
     }
 
 
-    function willSurvive(sq, x, y){
-        var ods = false;
-        var current = getCoords(sq, x, y);
-
-        var neighbors = new Array();
-        for(var nb = 1; nb <9; nb++){
-
-        }
-
-
-
-        return ods;
-    }
-
-    for(var i = 0; i < map.length; i++){
-        var neightbours = getAllNeighbours(i);
-        willSurvive(i, map.dimensions.x,map.dimensions.y);
-    }*/
-
-    console.log(getAllNeighbours(map));
 
     return nextGen;
 }
@@ -150,42 +137,60 @@ var print = function(game){
 
         for(var b = 0; b < game[0].length; b++){
 
-            var s = parseInt((a*game.length)+b);
-
             var res = game[a][b].isAlive();
+
             if(res){
-                output +="X";
+                output +="x";
             } else {
-                output +="O";
+                output +=".";
             }
 
         }
         output +="\r\n";
     }
-    console.log(output);
+
+    return output;
 }
 
-function processGeneration(){
-
-};
-
-var map =  ["x     ",
-            "  xx  ",
-            "  xx  ",
-            "x  x  ",
-            "x    x"];
 
 
-var game = initGame(map, map[0].length, map.length);
+/*var map =  ["      ",
+            "x     ",
+            "x     ",
+            "x     ",
+            "      "];*/
+
+/*
+
+ ......
+ x.....
+ x.....
+ x.....
+ ......
+* */
+
 
 /* testing field */
-//console.log(game);
-console.log(game[0][0].neighbours());
-//print(game);
-//nextGen(game);
-/*var sq = new square("X");
-console.log(sq);
-sq.becomeDead();
-console.log("result2", sq.isAlive());
-sq.becomeAlive();
-console.log("result2", sq.isAlive());*/
+/*console.log(print(game));
+
+game = nextGen(game);
+console.log(print(game));
+game = nextGen(game);
+console.log(print(game));*/
+var game = new Array();
+
+$("#initialize").click(function(){
+    var userMap = $("#userMap").val();
+    var map = userMap.split("\n");
+
+    game = initGame(map, map[0].length, map.length);
+    $("#lifeMap").html(print(game));
+
+});
+
+$("#executeGen").click(function(){
+    game = nextGen(game);
+
+    $("#lifeMap").html(print(game));
+
+});
